@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AJL's Lumpia and Bread Roll</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--g:#1d5a3a;--g2:#e6f0e8;--y:#e3a72f;--ink:#2a1d14;--bg:#f5f2ea;--r:#b3261e;--m:#6b5d52}
+*{box-sizing:border-box}body{margin:0;font:16px/1.5 Roboto,'Segoe UI',system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+h1,h2,h3{font-family:'Bricolage Grotesque',Georgia,serif;line-height:1.15;margin:.2em 0 .5em}h1{font-size:1.8rem}
+.top{position:sticky;top:0;z-index:6;display:flex;gap:10px;align-items:center;background:var(--g);color:#fff;padding:6px 12px;height:56px}
+.top a{color:#fff;text-decoration:none;font-weight:800;display:flex;align-items:center;gap:8px;font-family:'Bricolage Grotesque',Georgia,serif}
+#menuBtn{background:none;border:0;color:#fff;font-size:26px;min-width:44px;min-height:44px}
+nav{position:fixed;top:56px;bottom:0;left:0;width:240px;background:#fff;border-right:1px solid #ddd;padding:10px;overflow:auto;transform:translateX(-100%);transition:transform .2s;z-index:5}
+.open nav{transform:none}nav a{display:block;padding:12px;border-radius:8px;color:var(--ink);text-decoration:none}nav a.on{background:var(--g2);color:var(--g);font-weight:700}
+main{padding:16px;max-width:1100px;margin:0 auto}
+@media(min-width:900px){#menuBtn{display:none}nav{transform:none}main{margin-left:240px;max-width:none;padding:24px 32px}}
+.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;border:1px solid #e4ddd0}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.grid .card{margin:0}
+.grid2{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.stat small{color:var(--m)}.stat b{display:block;font-size:1.35rem}
+.btn{min-height:44px;padding:0 18px;border:0;border-radius:10px;background:var(--g);color:#fff;font:inherit;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.btn.ghost{background:#fff;color:var(--g);border:2px solid var(--g)}.btn.danger{background:var(--r)}.btn.gold{background:var(--y);color:var(--ink)}.btn:disabled{opacity:.6}.btn.sm{min-height:36px;padding:0 12px}
+input,select,textarea{width:100%;min-height:44px;padding:8px 10px;border:1px solid #bfb6a6;border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+label{display:block;font-weight:600;margin:8px 0 2px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.row>*{flex:1 1 140px}.row>.btn{flex:0 0 auto}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:560px}th,td{padding:8px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}th{background:var(--g2)}.empty{color:var(--m);text-align:center}
+.bar{display:grid;grid-template-columns:90px 1fr 90px;gap:8px;align-items:center;font-size:.9rem;margin:4px 0}.bar i{display:block;height:14px;background:var(--y);border-radius:4px}
+#toast{position:fixed;left:12px;right:12px;bottom:12px;z-index:30;pointer-events:none}.t{padding:12px 14px;border-radius:10px;color:#fff;margin-top:6px;background:var(--g)}.t.err{background:var(--r)}
+#modal{position:fixed;inset:0;background:#0007;z-index:20;display:flex;align-items:center;justify-content:center;padding:12px}#modal[hidden]{display:none}
+.mb{background:#fff;border-radius:14px;padding:18px;max-width:660px;width:100%;max-height:92vh;overflow:auto}
+.pill{padding:2px 8px;border-radius:99px;background:var(--g2);font-size:.8rem}.low{background:#fde2dd;color:var(--r)}.warn{background:#fff4d6;border:1px solid var(--y);padding:10px;border-radius:8px}
+.hero{background:var(--g);color:#fff;border-radius:16px;padding:28px 20px;margin-bottom:16px}.hero h1{font-size:2.3rem}.hero .row>*{flex:0 0 auto}
+.ph{display:flex;align-items:center;justify-content:center;font-size:4rem;height:160px;background:var(--g2);border-radius:10px}.pimg{width:100%;height:160px;object-fit:cover;border-radius:10px}
+.prow{display:grid;grid-template-columns:1fr 80px auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #eee}
+#printarea{display:none}#printarea table{min-width:0}.rc{max-width:340px;font-family:monospace}
+@media print{body>*:not(#printarea){display:none!important}#printarea{display:block}}
+</style>
+</head>
+<body>
+<header class="top"><button id="menuBtn" aria-label="Open menu">☰</button><a href="#home" id="brand"></a></header>
+<nav id="nav" aria-label="Main menu"></nav>
+<main id="view"></main>
+<div id="toast" aria-live="polite"></div><div id="modal" hidden></div><div id="printarea"></div>
+<script src="config.js"></script>
+<script>
+const API=(window.CONFIG||{}).API_URL||'',PAY=['Cash','GCash','Maya','Bank Transfer','Other'],CATS=['Ingredients','Wrappers and packaging','Transportation','Utilities','Other business expenses'];
+const NAV=[['home','Home'],['dashboard','Dashboard'],['pos','POS / New Sale'],['previous','Add Previous Sales'],['history','Sales History'],['products','Products'],['inventory','Inventory'],['expenses','Expenses'],['income','Income Statement'],['reports','Reports'],['settings','Settings']];
+const DEF={'Business Name':"AJL's Lumpia and Bread Roll",'Tagline':'Fresh lumpia and bread rolls','Phone':'','Email':'','Address':'','Facebook':'','Receipt Footer':'Salamat po! Thank you!'};
+const LOGO='<svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#e3a72f"/><rect x="7" y="15" width="26" height="10" rx="5" fill="#fff" transform="rotate(-20 20 20)"/><text x="20" y="35" font-size="9" text-anchor="middle" font-weight="800" fill="#1d5a3a">AJL</text></svg>';
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const peso=n=>'₱'+(+n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}),pad=n=>String(n).padStart(2,'0');
+const fmt=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),today=()=>fmt(new Date());
+const addDays=(s,n)=>{const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);return fmt(d)};
+const wk=s=>{const k=(new Date(s+'T00:00:00').getDay()+6)%7;return[addDays(s,-k),addDays(s,6-k)]};
+const mo=s=>[s.slice(0,8)+'01',fmt(new Date(+s.slice(0,4),+s.slice(5,7),0))];
+const dd=s=>{const d=new Date(s+'T00:00:00');return isNaN(d)?esc(s):d.toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'})};
+const uid=p=>p+'-'+Date.now().toString(36).toUpperCase()+Math.random().toString(36).slice(2,6).toUpperCase();
+const inR=(d,a,b)=>(!a||d>=a)&&(!b||d<=b),cur=()=>(location.hash.slice(1)||'home').split('?')[0];
+let DB=null;
+const S=k=>(DB&&DB.Settings[k])||DEF[k]||'',act=()=>DB.Products.filter(p=>p.Status==='Active'),itemsOf=id=>DB.IT[id]||[];
+const sumry=id=>itemsOf(id).map(i=>`${i.Quantity} ${i['Product Name']} × ${peso(i['Unit Price'])}`).join('; ');
+
+/* ---------- API ---------- */
+const needApi=()=>{if(!/^https:\/\//.test(API))throw new Error('Backend not connected. Set API_URL in frontend/config.js (see README).')};
+async function load(){needApi();let j;try{j=await(await fetch(API+'?action=all')).json()}catch(e){throw new Error('Cannot reach Google Sheets. Check your internet connection and the API_URL in config.js.')}
+ if(!j.ok)throw new Error(j.error||'Google Sheets returned an error.');DB=j.data;DB.IT={};DB.SaleItems.forEach(i=>(DB.IT[i['Transaction ID']]=DB.IT[i['Transaction ID']]||[]).push(i));return DB}
+async function post(action,data){needApi();let j;try{j=await(await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action,data})})).json()}
+ catch(e){throw new Error('Could not reach Google Sheets, so nothing was confirmed saved. Check your connection and try again.')}
+ if(!j.ok)throw new Error(j.error||'Save failed.');return j}
+
+/* ---------- UI helpers ---------- */
+function toast(m,t){const e=document.createElement('div');e.className='t '+(t||'');e.textContent=m;$('#toast').append(e);setTimeout(()=>e.remove(),t?6000:3500)}
+function modal(h){const m=$('#modal');m.innerHTML='<div class="mb" role="dialog" aria-modal="true">'+h+'</div>';m.hidden=false;m.onclick=e=>{if(e.target===m)closeM()}}
+const closeM=()=>{$('#modal').hidden=true;$('#modal').innerHTML=''};
+const ask=(msg,ok='Delete')=>new Promise(r=>{modal(`<p>${esc(msg)}</p><div class="row"><button class="btn ghost" id="cn">Cancel</button><button class="btn danger" id="cy">${ok}</button></div>`);$('#cn').onclick=()=>{closeM();r(false)};$('#cy').onclick=()=>{closeM();r(true)}});
+async function run(b,fn){if(b.disabled)return;b.disabled=true;const t=b.textContent;b.textContent='Saving…';try{await fn()}catch(e){toast(e.message,'err')}finally{b.disabled=false;b.textContent=t}}
+function csv(name,cols,rows){const q=x=>'"'+String(x??'').replace(/"/g,'""')+'"',a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+[cols,...rows].map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv'}));a.download=name+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+const table=(cols,rows)=>`<div class="tw"><table><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows.length?rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join(''):`<tr><td colspan="${cols.length}" class="empty">No records yet.</td></tr>`}</tbody></table></div>`;
+const printHtml=h=>{$('#printarea').innerHTML=h;window.print()};
+const stat=(l,v)=>`<div class="card stat"><small>${l}</small><b>${v}</b></div>`;
+const bars=p=>{const mx=Math.max(1,...p.map(x=>x[1]));return p.length?p.map(([l,v])=>`<div class="bar"><span>${esc(l)}</span><i style="width:${Math.max(2,v/mx*100)}%"></i><b>${peso(v)}</b></div>`).join(''):'<p class="empty">No sales in this period.</p>'};
+const errBox=e=>`<div class="card warn"><b>Problem connecting to your data</b><p>${esc(e.message)}</p><button class="btn" onclick="go()">Try again</button></div>`;
+const pOpts=(sel,list)=>(list||act()).map(p=>`<option value="${p['Product ID']}" ${p['Product ID']===sel?'selected':''}>${esc(p['Product Name'])}</option>`).join('');
+
+/* ---------- finance ---------- */
+const salesIn=(a,b,t)=>DB.Sales.filter(s=>inR(s['Actual Sales Date'],a,b)&&(!t||s['Record Type']===t));
+function fin(a,b){const Sx=salesIn(a,b);let rev=0,cogs=0,miss=false,units={};
+ Sx.forEach(s=>{rev+=+s['Total Amount'];itemsOf(s['Transaction ID']).forEach(i=>{cogs+=i.Quantity*i['Unit Cost'];if(!+i['Unit Cost'])miss=true;units[i['Product Name']]=(units[i['Product Name']]||0)+ +i.Quantity})});
+ const opex=DB.Expenses.filter(e=>inR(e['Actual Expense Date'],a,b)).reduce((t,e)=>t+ +e.Amount,0);
+ return{rev,cogs,miss,gross:rev-cogs,opex,net:rev-cogs-opex,tx:Sx.length,units,S:Sx}}
+const grp=(L,key)=>{const g={};L.forEach(s=>{const o=g[key(s['Actual Sales Date'])]=g[key(s['Actual Sales Date'])]||{n:0,u:0,r:0};o.n++;o.r+= +s['Total Amount'];itemsOf(s['Transaction ID']).forEach(i=>o.u+= +i.Quantity)});return Object.keys(g).sort().map(k=>[k,g[k].n,g[k].u,g[k].r])};
+function reportData(t,a,b){const L=salesIn(a,b).sort((x,y)=>y['Actual Sales Date'].localeCompare(x['Actual Sales Date'])),E=DB.Expenses.filter(e=>inR(e['Actual Expense Date'],a,b));
+ const per={daily:d=>d,weekly:d=>wk(d)[0],monthly:d=>d.slice(0,7),annual:d=>d.slice(0,4)};
+ if(per[t])return{title:t[0].toUpperCase()+t.slice(1)+' sales report',cols:['Period','Transactions','Units sold','Revenue'],rows:grp(L,per[t]),money:[3]};
+ if(t==='product'||t==='qty'){const g={};L.forEach(s=>itemsOf(s['Transaction ID']).forEach(i=>{const o=g[i['Product Name']]=g[i['Product Name']]||{q:0,r:0};o.q+= +i.Quantity;o.r+= +i['Line Total']}));
+  return t==='qty'?{title:'Quantity sold by product',cols:['Product','Quantity sold'],rows:Object.keys(g).map(k=>[k,g[k].q]),money:[]}:{title:'Sales by product',cols:['Product','Quantity','Revenue'],rows:Object.keys(g).map(k=>[k,g[k].q,g[k].r]),money:[2]}}
+ if(t==='historical'||t==='transactions')return{title:t==='historical'?'Historical sales report':'Transaction history',cols:['Sales date','Transaction ID','Items','Total','Payment','Type','Recorded at'],money:[3],
+  rows:L.filter(s=>t==='transactions'||s['Record Type']==='Historical Sale').map(s=>[s['Actual Sales Date'],s['Transaction ID'],sumry(s['Transaction ID']),+s['Total Amount'],s['Payment Method'],s['Record Type'],s['Recorded At']])};
+ if(t==='expense')return{title:'Expense report',cols:['Date','Expense ID','Category','Description','Amount','Recorded at'],money:[4],rows:E.sort((x,y)=>y['Actual Expense Date'].localeCompare(x['Actual Expense Date'])).map(e=>[e['Actual Expense Date'],e['Expense ID'],e.Category,e.Description,+e.Amount,e['Recorded At']])};
+ if(t==='inventory')return{title:'Inventory report',cols:['Product','Current stock','Low-stock threshold','Status'],money:[],rows:DB.Products.map(p=>[p['Product Name'],+p['Current Stock'],+p['Low Stock Threshold'],+p['Current Stock']<=+p['Low Stock Threshold']?'Low stock':'OK'])};
+ const f=fin(a,b),nr=f.miss&&!f.cogs,es=f.miss?' (estimate)':'';
+ return{title:'Income statement',cols:['Line','Amount'],money:[1],rows:[['Sales revenue',f.rev],['Cost of goods sold',nr?'Cost not recorded':f.cogs],['Gross profit'+es,nr?'Unavailable':f.gross],['Operating expenses',f.opex],['Net income'+es,nr?f.rev-f.opex+' (revenue − expenses only)':f.net]]}}
+const fm=(r,m)=>r.map((c,i)=>m.includes(i)&&typeof c==='number'?peso(c):c);
+function showReport(el,d,name){el.innerHTML=`<div class="card"><h2>${esc(d.title)}</h2>${table(d.cols,d.rows.map(r=>fm(r,d.money).map(esc)))}<div class="row"><button class="btn ghost" id="rp">Print</button><button class="btn gold" id="rc">Export CSV</button></div></div>`;
+ $('#rp').onclick=()=>printHtml(`<h2>${esc(S('Business Name'))}</h2><h3>${esc(d.title)}</h3>`+table(d.cols,d.rows.map(r=>fm(r,d.money).map(esc))));$('#rc').onclick=()=>csv(name,d.cols,d.rows)}
+const dateRow=(a,b)=>`<div class="card row"><div><label>From</label><input type="date" id="fa" value="${a}"></div><div><label>To</label><input type="date" id="fb" value="${b}"></div></div>`;
+
+/* ---------- receipts ---------- */
+function receipt(id){const s=DB.Sales.find(x=>x['Transaction ID']===id);return`<div class="rc"><h3>${esc(S('Business Name'))}</h3><p>${esc(S('Phone'))}</p><p>Receipt: ${esc(id)}<br>Sales date: ${dd(s['Actual Sales Date'])}<br>Recorded: ${esc(s['Recorded At'])}<br>${esc(s['Record Type'])} · ${esc(s['Payment Method'])}</p>
+ ${itemsOf(id).map(i=>`<p>${esc(i['Product Name'])}<br>${i.Quantity} × ${peso(i['Unit Price'])} = <b>${peso(i['Line Total'])}</b></p>`).join('')}<p><b>TOTAL ${peso(s['Total Amount'])}</b></p>
+ ${s['Cash Received']!==''?`<p>Cash ${peso(s['Cash Received'])}<br>Change ${peso(s.Change)}</p>`:''}<p>${esc(S('Receipt Footer'))}</p></div>`}
+
+/* ---------- pages ---------- */
+const R={};
+R.home=v=>{const P=DB?act():[{'Product Name':'Lumpia','Selling Price':5,Description:'Crispy, golden fried lumpia.'},{'Product Name':'Bread Roll','Selling Price':10,Description:'Soft, freshly made bread roll.'}],em=['🥟','🥖'];
+ v.innerHTML=`<section class="hero"><div style="display:flex;gap:12px;align-items:center">${LOGO}<b>${esc(S('Business Name'))}</b></div><h1>Maraming salamat sa pagbisita!</h1><p>${esc(S('Tagline'))}. Lumpia at ₱5 and bread rolls at ₱10 — priced for everyday snacking.</p>
+ <div class="row"><a class="btn gold" href="#pos">Open POS System</a><a class="btn ghost" href="#dashboard">View Sales Dashboard</a></div></section>
+ <h2>Our Products</h2><div class="grid2">${P.map((p,i)=>`<div class="card"><img class="pimg" src="assets/${p['Product Name'].toLowerCase().replace(/\s+/g,'-')}.jpg" alt="${esc(p['Product Name'])}" onerror="this.outerHTML='<div class=ph>${em[i%2]}</div>'"><h3>${esc(p['Product Name'])} — ${peso(p['Selling Price'])} per piece</h3><p>${esc(p.Description||'')}</p></div>`).join('')}</div>
+ <h2>Why customers come back</h2><div class="grid"><div class="card">Prepared fresh</div><div class="card">Pocket-friendly prices</div><div class="card">Bulk orders welcome</div></div>
+ <h2>Contact us</h2><div class="card">${[['Phone',S('Phone')],['Email',S('Email')],['Address',S('Address')],['Facebook',S('Facebook')]].map(([k,x])=>`<p><b>${k}:</b> ${x?esc(x):'<i>Add in Settings</i>'}</p>`).join('')}</div>
+ <footer class="empty">© ${new Date().getFullYear()} ${esc(S('Business Name'))}. All rights reserved.</footer>`;
+ if(!DB&&/^https:/.test(API))load().then(()=>{if(cur()==='home')R.home(v)}).catch(()=>{})};
+
+let DS={};
+R.dashboard=v=>{if(!DS.from)DS={from:mo(today())[0],to:today(),sel:today()};
+ const f=fin(DS.from,DS.to),sm=(a,b)=>salesIn(a,b).reduce((t,s)=>t+ +s['Total Amount'],0),w=wk(DS.sel),m=mo(DS.sel),es=f.miss?' (estimate)':'',byD={};
+ f.S.forEach(s=>byD[s['Actual Sales Date']]=(byD[s['Actual Sales Date']]||0)+ +s['Total Amount']);
+ const byP=DB.Products.map(p=>[p['Product Name'],f.S.reduce((t,s)=>t+itemsOf(s['Transaction ID']).filter(i=>i['Product ID']===p['Product ID']).reduce((x,i)=>x+ +i['Line Total'],0),0)]);
+ const recent=[...DB.Sales].sort((a,b)=>String(b['Recorded At']).localeCompare(a['Recorded At'])).slice(0,8);
+ v.innerHTML=`<div class="row"><h1>Dashboard</h1><button class="btn ghost" id="rf">Refresh</button></div>
+ <div class="card row"><div><label>From</label><input type="date" data-k="from" value="${DS.from}"></div><div><label>To</label><input type="date" data-k="to" value="${DS.to}"></div><div><label>Selected date</label><input type="date" data-k="sel" value="${DS.sel}"></div></div>
+ <div class="grid">${stat('Today’s sales',peso(sm(today(),today())))}${stat('Sales on '+dd(DS.sel),peso(sm(DS.sel,DS.sel)))}${stat('Week of '+dd(w[0]),peso(sm(...w)))}${stat('Month of '+dd(m[0]),peso(sm(...m)))}</div>
+ <h2>Selected range: ${dd(DS.from)} to ${dd(DS.to)}</h2>${f.miss?'<p class="warn">Unit cost is not recorded for some items, so profit figures are estimates. Add costs in Products.</p>':''}
+ <div class="grid">${stat('Revenue',peso(f.rev))}${stat('Recorded expenses',peso(f.opex))}${stat('Gross profit'+es,peso(f.gross))}${stat('Net income'+es,peso(f.net))}${stat('Transactions',f.tx)}${DB.Products.map(p=>stat('Sold: '+esc(p['Product Name']),f.units[p['Product Name']]||0)).join('')}</div>
+ <div class="grid2" style="margin-top:16px"><div class="card"><h2>Sales by date</h2>${bars(Object.keys(byD).sort().slice(-31).map(k=>[k.slice(5),byD[k]]))}</div><div class="card"><h2>Sales by product</h2>${bars(byP)}</div></div>
+ <div class="card"><h2>Current inventory</h2>${table(['Product','Stock','Status'],DB.Products.map(p=>[esc(p['Product Name']),p['Current Stock'],+p['Current Stock']<=+p['Low Stock Threshold']?'<span class="pill low">Low stock</span>':'<span class="pill">OK</span>']))}</div>
+ <div class="card"><h2>Recent transactions</h2>${table(['Sales date','ID','Items','Total'],recent.map(s=>[dd(s['Actual Sales Date']),esc(s['Transaction ID']),esc(sumry(s['Transaction ID'])),peso(s['Total Amount'])]))}</div>`;
+ v.querySelectorAll('input[data-k]').forEach(i=>i.onchange=()=>{DS[i.dataset.k]=i.value||DS[i.dataset.k];R.dashboard(v)});
+ $('#rf').onclick=e=>run(e.target,async()=>{await load();R.dashboard(v);toast('Refreshed from Google Sheets.')})};
+
+R.pos=v=>{let cart=[],id=uid('S');const P=act();
+ v.innerHTML=`<h1>New sale</h1><div class="grid2"><section class="card"><h2>Products</h2>${P.map(p=>`<div class="prow"><div><b>${esc(p['Product Name'])}</b><br><small>${peso(p['Selling Price'])} · stock ${p['Current Stock']}</small></div><input type="number" min="1" step="1" inputmode="numeric" value="1" aria-label="Quantity" id="q${p['Product ID']}"><button class="btn sm" data-a="${p['Product ID']}">Add to cart</button></div>`).join('')||'<p class="empty">No active products.</p>'}</section>
+ <section class="card"><h2>Cart</h2><div id="ct"></div><label>Payment method</label><select id="pm">${PAY.map(p=>`<option>${p}</option>`).join('')}</select><div id="cw"><label>Cash received (₱)</label><input type="number" min="0" step="0.01" inputmode="decimal" id="cr"></div><p id="ch"></p><small id="meta"></small><br><button class="btn" id="sv" style="width:100%;margin-top:8px">Save Sale</button></section></div>`;
+ const tot=()=>cart.reduce((t,c)=>t+c.q*c.p['Selling Price'],0);
+ const draw=()=>{$('#ct').innerHTML=table(['Item','Qty','Subtotal',''],cart.map((c,i)=>[esc(c.p['Product Name'])+'<br><small>'+peso(c.p['Selling Price'])+'</small>',`<input type="number" min="1" step="1" value="${c.q}" data-u="${i}" style="width:70px" aria-label="Quantity">`,peso(c.q*c.p['Selling Price']),`<button class="btn danger sm" data-r="${i}">Remove</button>`]))+`<h2>Total: ${peso(tot())}</h2>`;
+  const cash=$('#pm').value==='Cash';$('#cw').hidden=!cash;const r=+$('#cr').value;$('#ch').innerHTML=cash?'Change: <b>'+(r>=tot()&&tot()>0?peso(r-tot()):'—')+'</b>':'';$('#meta').textContent='Transaction ID: '+id+' · '+new Date().toLocaleString('en-PH')};
+ v.onclick=e=>{const a=e.target.dataset.a,r=e.target.dataset.r;if(a){const q=+$('#q'+a).value;if(!Number.isInteger(q)||q<1)return toast('Enter a whole-number quantity of 1 or more.','err');const p=P.find(x=>x['Product ID']===a),c=cart.find(x=>x.p===p);c?c.q+=q:cart.push({p,q});draw()}if(r!==undefined){cart.splice(+r,1);draw()}};
+ v.onchange=e=>{if(e.target.dataset.u!==undefined){const q=+e.target.value;if(Number.isInteger(q)&&q>0)cart[+e.target.dataset.u].q=q;else toast('Quantity must be a whole number of 1 or more.','err')}draw()};
+ $('#cr').oninput=draw;draw();
+ $('#sv').onclick=e=>run(e.target,async()=>{if(!cart.length)throw new Error('Add at least one item to the cart.');const pm=$('#pm').value,cash=+$('#cr').value;if(pm==='Cash'&&(!$('#cr').value||cash<tot()))throw new Error('Cash received must be at least '+peso(tot())+'.');
+  const j=await post('saveSale',{id,recordType:'New Sale',paymentMethod:pm,cashReceived:cash,items:cart.map(c=>({productId:c.p['Product ID'],quantity:c.q,unitPrice:c.p['Selling Price']}))});
+  await load();toast(j.duplicate?'This sale was already saved.':'Sale saved to Google Sheets.');const sid=id;modal(receipt(sid)+'<div class="row"><button class="btn" id="pr">Print receipt</button><button class="btn ghost" id="cl">Close</button></div>');$('#pr').onclick=()=>printHtml(receipt(sid));$('#cl').onclick=()=>{closeM();R.pos(v)}})};
+
+function saleForm(el,o){const old=o.tx?DB.Sales.find(s=>s['Transaction ID']===o.tx):null,oi=old?itemsOf(o.tx):[],id=old?o.tx:uid('H');
+ const net=old?DB.Inventory.filter(m=>m['Related Transaction ID']===o.tx).reduce((t,m)=>t+ +m.Quantity,0):0,PS=DB.Products.filter(p=>p.Status==='Active'||oi.some(i=>i['Product ID']===p['Product ID']));
+ let rows=old?oi.map(i=>({p:i['Product ID'],q:i.Quantity,pr:i['Unit Price']})):[{p:'',q:1,pr:''}];
+ el.innerHTML=`<form id="sf" novalidate><div class="row"><div><label>Actual sales date</label><input type="date" id="sd" max="${today()}" value="${old?old['Actual Sales Date']:''}"></div><div><label>Payment method</label><select id="sp">${PAY.map(p=>`<option ${old&&old['Payment Method']===p?'selected':''}>${p}</option>`).join('')}</select></div></div><div id="sr"></div>
+ <button type="button" class="btn ghost sm" id="ar">+ Add another product</button><h3>Total: <span id="st"></span></h3>
+ <div class="row"><div><label>Customer (optional)</label><input id="sc" value="${esc(old?old['Customer Name']:'')}"></div><div><label>Notes (optional)</label><input id="sn" value="${esc(old?old.Notes:'')}"></div></div>
+ <label><input type="checkbox" id="sk" style="width:auto;min-height:0" ${net<0?'checked':''}> Also deduct these items from current stock</label><small>Leave unchecked if your stock count already reflects these sales.</small>
+ <p><small>Record ID: ${id} · ${old?'Entered: '+esc(old['Recorded At']):'Entry time is saved automatically'}</small></p><button class="btn" id="ss">${old?'Save correction':'Save historical sale'}</button></form>`;
+ const draw=()=>{$('#sr').innerHTML=rows.map((r,i)=>`<div class="row" data-i="${i}"><div><label>Product</label><select data-f="p"><option value="">Select…</option>${pOpts(r.p,PS)}</select></div><div><label>Qty</label><input type="number" min="1" step="1" inputmode="numeric" data-f="q" value="${r.q}"></div><div><label>Price on sales date</label><input type="number" min="0" step="0.01" inputmode="decimal" data-f="pr" value="${r.pr}"></div><div><label>Line total</label>${peso(r.q*r.pr)}</div>${rows.length>1?`<button type="button" class="btn danger sm" data-x="${i}">Remove</button>`:''}</div>`).join('');$('#st').textContent=peso(rows.reduce((t,r)=>t+r.q*r.pr,0))};
+ $('#sr').onchange=e=>{const f=e.target.dataset.f;if(!f)return;const r=rows[+e.target.closest('[data-i]').dataset.i];if(f==='p'){r.p=e.target.value;const p=PS.find(x=>x['Product ID']===r.p);if(p)r.pr=p['Selling Price']}else r[f]=e.target.value;draw()};
+ $('#sr').onclick=e=>{if(e.target.dataset.x!==undefined){rows.splice(+e.target.dataset.x,1);draw()}};$('#ar').onclick=()=>{rows.push({p:'',q:1,pr:''});draw()};draw();
+ $('#sf').onsubmit=e=>{e.preventDefault();run($('#ss'),async()=>{const date=$('#sd').value;if(!date)throw new Error('Choose the actual sales date.');if(date>today())throw new Error('Sales date cannot be in the future.');
+  const items=rows.map(r=>({productId:r.p,quantity:+r.q,unitPrice:+r.pr}));if(rows.some(r=>!r.p||!Number.isInteger(+r.q)||+r.q<1||r.pr===''||!(+r.pr>=0)))throw new Error('Every line needs a product, a whole-number quantity, and a price.');
+  const j=await post(old?'updateSale':'saveSale',{id,date,recordType:'Historical Sale',items,paymentMethod:$('#sp').value,customer:$('#sc').value,notes:$('#sn').value,deductStock:$('#sk').checked});
+  toast(j.duplicate?'This record was already saved.':'Saved to Google Sheets.');await load();o.onDone()})}}
+
+function history(el,fixed){const f={q:'',a:'',b:'',p:'',t:fixed||''};
+ el.innerHTML=`<div class="card row"><div><label>Transaction ID</label><input data-k="q" placeholder="Search…"></div><div><label>From</label><input type="date" data-k="a"></div><div><label>To</label><input type="date" data-k="b"></div><div><label>Product</label><select data-k="p"><option value="">All</option>${pOpts('',DB.Products)}</select></div>${fixed?'':`<div><label>Type</label><select data-k="t"><option value="">All</option><option>New Sale</option><option>Historical Sale</option></select></div>`}<button class="btn gold" id="ex">Export CSV</button></div><div class="card" id="hl"></div>`;
+ const list=()=>DB.Sales.filter(s=>(!f.q||s['Transaction ID'].toLowerCase().includes(f.q.toLowerCase()))&&inR(s['Actual Sales Date'],f.a,f.b)&&(!f.t||s['Record Type']===f.t)&&(!f.p||itemsOf(s['Transaction ID']).some(i=>i['Product ID']===f.p))).sort((x,y)=>y['Actual Sales Date'].localeCompare(x['Actual Sales Date'])||String(y['Recorded At']).localeCompare(x['Recorded At']));
+ const draw=()=>{$('#hl').innerHTML=table(['Sales date','Transaction ID','Items','Total','Payment','Type','Recorded at',''],list().map(s=>[dd(s['Actual Sales Date']),esc(s['Transaction ID']),esc(sumry(s['Transaction ID'])),peso(s['Total Amount']),esc(s['Payment Method']),esc(s['Record Type']),esc(s['Recorded At']),`<button class="btn ghost sm" data-v="${s['Transaction ID']}">View</button> <button class="btn sm" data-e="${s['Transaction ID']}">Edit</button> <button class="btn danger sm" data-d="${s['Transaction ID']}">Delete</button>`]))};
+ el.querySelectorAll('[data-k]').forEach(i=>i.oninput=()=>{f[i.dataset.k]=i.value;draw()});draw();
+ $('#ex').onclick=()=>csv('sales-history',['Transaction ID','Actual Sales Date','Recorded At','Items','Total Amount','Payment Method','Record Type','Customer','Notes'],list().map(s=>[s['Transaction ID'],s['Actual Sales Date'],s['Recorded At'],sumry(s['Transaction ID']),s['Total Amount'],s['Payment Method'],s['Record Type'],s['Customer Name'],s.Notes]));
+ el.onclick=async e=>{const t=e.target,v=t.dataset.v,ed=t.dataset.e,de=t.dataset.d;
+  if(v){const s=DB.Sales.find(x=>x['Transaction ID']===v);modal(receipt(v)+`<p><small>${esc(s.Notes||'')} ${s['Customer Name']?'· Customer: '+esc(s['Customer Name']):''}</small></p><div class="row"><button class="btn" id="pr">Print receipt</button><button class="btn ghost" id="cl">Close</button></div>`);$('#pr').onclick=()=>printHtml(receipt(v));$('#cl').onclick=closeM}
+  if(ed){modal('<h2>Correct sale</h2><div id="mf"></div><button class="btn ghost" id="cl" style="margin-top:8px">Cancel</button>');$('#cl').onclick=closeM;saleForm($('#mf'),{tx:ed,onDone:()=>{closeM();go()}})}
+  if(de&&await ask('Delete transaction '+de+'? This cannot be undone, but the deletion is kept in the audit log.'))run(t,async()=>{await post('deleteSale',{id:de});await load();toast('Deleted. Stock and reports updated.');go()})}}
+R.previous=v=>{v.innerHTML='<h1>Add previous sales</h1><p>Record sales you made before using the POS. They are reported under the actual sales date you choose.</p><div class="card" id="pf"></div><h2>Historical sales entered</h2><div id="ph"></div>';saleForm($('#pf'),{onDone:go});history($('#ph'),'Historical Sale')};
+R.history=v=>{v.innerHTML='<h1>Sales history</h1><div id="ph"></div>';history($('#ph'))};
+
+R.products=v=>{v.innerHTML=`<div class="row"><h1>Products</h1><button class="btn" id="ad">Add product</button></div><div class="card">${table(['ID','Name','Description','Price','Unit cost','Stock','Low-stock at','Status','Created',''],DB.Products.map(p=>[p['Product ID'],esc(p['Product Name']),esc(p.Description),peso(p['Selling Price']),peso(p['Unit Cost']),p['Current Stock'],p['Low Stock Threshold'],p.Status,esc(p['Date Created']),`<button class="btn sm" data-e="${p['Product ID']}">Edit</button>`]))}</div><small>Price changes only affect new sales. Past sales keep the price they were sold at.</small>`;
+ const form=id=>{const p=DB.Products.find(x=>x['Product ID']===id)||{};modal(`<h2>${id?'Edit':'Add'} product</h2><label>Name</label><input id="pn" value="${esc(p['Product Name'])}"><label>Description</label><input id="pd" value="${esc(p.Description)}"><div class="row"><div><label>Selling price (₱)</label><input id="pp" type="number" min="0" step="0.01" value="${p['Selling Price']??''}"></div><div><label>Unit cost (₱)</label><input id="pc" type="number" min="0" step="0.01" value="${p['Unit Cost']??''}"></div></div><div class="row">${id?'':'<div><label>Opening stock</label><input id="ps" type="number" min="0" step="1" value="0"></div>'}<div><label>Low-stock threshold</label><input id="pl" type="number" min="0" step="1" value="${p['Low Stock Threshold']??20}"></div><div><label>Status</label><select id="pt"><option>Active</option><option ${p.Status==='Inactive'?'selected':''}>Inactive</option></select></div></div><div class="row"><button class="btn ghost" id="cl">Cancel</button><button class="btn" id="sv">Save product</button></div>`);
+  $('#cl').onclick=closeM;$('#sv').onclick=e=>run(e.target,async()=>{if(!$('#pn').value.trim())throw new Error('Product name is required.');await post('saveProduct',{id,name:$('#pn').value,description:$('#pd').value,price:$('#pp').value,cost:$('#pc').value,stock:id?0:$('#ps').value,lowStock:$('#pl').value,status:$('#pt').value});await load();closeM();toast('Product saved.');go()})};
+ $('#ad').onclick=()=>form('');v.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>form(b.dataset.e))};
+
+R.inventory=v=>{let fp='';const low=DB.Products.filter(p=>p.Status==='Active'&&+p['Current Stock']<=+p['Low Stock Threshold']);
+ const sum=(pid,ty)=>DB.Inventory.filter(m=>m['Product ID']===pid&&ty.includes(m['Movement Type'])).reduce((t,m)=>t+ +m.Quantity,0);
+ const draw=()=>{$('#mv').innerHTML=table(['Date','Product','Type','Qty','Reason','Related sale','Recorded'],DB.Inventory.filter(m=>!fp||m['Product ID']===fp).sort((a,b)=>String(b['Recorded At']).localeCompare(String(a['Recorded At']))).map(m=>[dd(m['Movement Date']),esc((DB.Products.find(p=>p['Product ID']===m['Product ID'])||{})['Product Name']),esc(m['Movement Type']),m.Quantity,esc(m.Reason),esc(m['Related Transaction ID']),esc(m['Recorded At'])]))};
+ v.innerHTML=`<div class="row"><h1>Inventory</h1><button class="btn" id="ad">Record stock movement</button></div>${low.length?`<p class="warn"><b>Low stock:</b> ${low.map(p=>esc(p['Product Name'])+' ('+p['Current Stock']+')').join(', ')}</p>`:''}
+ <div class="card">${table(['Product','Beginning','Added','Sold (net)','Adjustments','Remaining','Status'],DB.Products.map(p=>{const id=p['Product ID'];return[esc(p['Product Name']),sum(id,['Beginning']),sum(id,['Addition']),-sum(id,['Sale','Correction']),sum(id,['Adjustment']),'<b>'+p['Current Stock']+'</b>',+p['Current Stock']<=+p['Low Stock Threshold']?'<span class="pill low">Low</span>':'<span class="pill">OK</span>']}))}<small>“Sold” counts only sales that deducted stock. Historical sales do not deduct stock unless you choose it, so no opening stock is invented.</small></div>
+ <h2>Movement history</h2><select id="mp"><option value="">All products</option>${pOpts('',DB.Products)}</select><div class="card" id="mv"></div>`;draw();$('#mp').onchange=e=>{fp=e.target.value;draw()};
+ $('#ad').onclick=()=>{const id=uid('INV');modal(`<h2>Record stock movement</h2><label>Product</label><select id="mp2">${pOpts('',DB.Products)}</select><label>Type</label><select id="mt"><option value="Addition">Stock added (prepared/purchased)</option><option value="Beginning">Beginning inventory</option><option value="Adjustment">Manual adjustment (+/−)</option></select><div class="row"><div><label>Quantity</label><input id="mq" type="number" step="1" inputmode="numeric"></div><div><label>Date</label><input id="md" type="date" max="${today()}" value="${today()}"></div></div><label>Reason (required for adjustments)</label><input id="mr"><div class="row"><button class="btn ghost" id="cl">Cancel</button><button class="btn" id="sv">Save movement</button></div>`);
+  $('#cl').onclick=closeM;$('#sv').onclick=e=>run(e.target,async()=>{await post('adjustStock',{id,productId:$('#mp2').value,type:$('#mt').value,quantity:$('#mq').value,date:$('#md').value,reason:$('#mr').value});await load();closeM();toast('Stock movement saved.');go()})}};
+
+R.expenses=v=>{const f={q:'',a:'',b:'',c:''},list=()=>DB.Expenses.filter(e=>(!f.q||(e.Description+e['Expense ID']+e['Receipt Reference']).toLowerCase().includes(f.q.toLowerCase()))&&inR(e['Actual Expense Date'],f.a,f.b)&&(!f.c||e.Category===f.c)).sort((a,b)=>b['Actual Expense Date'].localeCompare(a['Actual Expense Date']));
+ v.innerHTML=`<div class="row"><h1>Expenses</h1><button class="btn" id="ad">Add expense</button></div><div class="card row"><div><label>Search</label><input data-k="q"></div><div><label>From</label><input type="date" data-k="a"></div><div><label>To</label><input type="date" data-k="b"></div><div><label>Category</label><select data-k="c"><option value="">All</option>${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div><button class="btn gold" id="ex">Export CSV</button></div><div class="card" id="el"></div>`;
+ const draw=()=>{const L=list();$('#el').innerHTML=table(['Date','ID','Category','Description','Amount','Receipt','Recorded',''],L.map(e=>[dd(e['Actual Expense Date']),e['Expense ID'],esc(e.Category),esc(e.Description),peso(e.Amount),esc(e['Receipt Reference']),esc(e['Recorded At']),`<button class="btn sm" data-e="${e['Expense ID']}">Edit</button> <button class="btn danger sm" data-d="${e['Expense ID']}">Delete</button>`]))+`<h3>Total: ${peso(L.reduce((t,e)=>t+ +e.Amount,0))}</h3>`};
+ v.querySelectorAll('[data-k]').forEach(i=>i.oninput=()=>{f[i.dataset.k]=i.value;draw()});draw();
+ $('#ex').onclick=()=>csv('expenses',['Expense ID','Actual Expense Date','Recorded At','Category','Description','Amount','Receipt Reference','Notes'],list().map(e=>[e['Expense ID'],e['Actual Expense Date'],e['Recorded At'],e.Category,e.Description,e.Amount,e['Receipt Reference'],e.Notes]));
+ const form=eid=>{const x=DB.Expenses.find(e=>e['Expense ID']===eid)||{},id=eid||uid('E');modal(`<h2>${eid?'Edit':'Add'} expense</h2><div class="row"><div><label>Actual expense date</label><input id="xd" type="date" max="${today()}" value="${x['Actual Expense Date']||today()}"></div><div><label>Amount (₱)</label><input id="xa" type="number" min="0.01" step="0.01" inputmode="decimal" value="${x.Amount??''}"></div></div><label>Category</label><select id="xc">${CATS.map(c=>`<option ${x.Category===c?'selected':''}>${c}</option>`).join('')}</select><label>Description</label><input id="xs" value="${esc(x.Description)}"><label>Receipt reference (optional)</label><input id="xr" value="${esc(x['Receipt Reference'])}"><label>Notes (optional)</label><input id="xn" value="${esc(x.Notes)}"><div class="row"><button class="btn ghost" id="cl">Cancel</button><button class="btn" id="sv">Save expense</button></div>`);
+  $('#cl').onclick=closeM;$('#sv').onclick=e=>run(e.target,async()=>{if(!$('#xd').value)throw new Error('Choose the actual expense date.');const j=await post(eid?'updateExpense':'saveExpense',{id,date:$('#xd').value,amount:$('#xa').value,category:$('#xc').value,description:$('#xs').value,receipt:$('#xr').value,notes:$('#xn').value});await load();closeM();toast(j.duplicate?'This expense was already saved.':'Expense saved.');go()})};
+ $('#ad').onclick=()=>form('');v.onclick=async e=>{const t=e.target;if(t.dataset.e)form(t.dataset.e);if(t.dataset.d&&await ask('Delete expense '+t.dataset.d+'? The deletion is kept in the audit log.'))run(t,async()=>{await post('deleteExpense',{id:t.dataset.d});await load();toast('Expense deleted.');go()})}};
+
+let RG={a:'',b:'',t:'daily'};
+R.income=v=>{if(!RG.a)RG.a=mo(today())[0],RG.b=today();v.innerHTML='<h1>Income statement</h1>'+dateRow(RG.a,RG.b)+'<div id="rs"></div><small>Gross profit = Sales revenue − Cost of goods sold. Net income = Gross profit − Operating expenses. Cost of goods sold uses the unit cost saved with each sale.</small>';
+ const draw=()=>showReport($('#rs'),reportData('income',RG.a,RG.b),'income-statement');draw();['fa','fb'].forEach(i=>$('#'+i).onchange=e=>{RG[i==='fa'?'a':'b']=e.target.value;draw()})};
+R.reports=v=>{if(!RG.a)RG.a=mo(today())[0],RG.b=today();const T={daily:'Daily sales',weekly:'Weekly sales',monthly:'Monthly sales',annual:'Annual sales',product:'Sales by product',qty:'Quantity sold by product',historical:'Historical sales',expense:'Expenses',inventory:'Inventory',transactions:'Transaction history'};
+ v.innerHTML='<h1>Reports</h1><div class="card"><label>Report</label><select id="rt">'+Object.keys(T).map(k=>`<option value="${k}" ${RG.t===k?'selected':''}>${T[k]}</option>`).join('')+'</select></div>'+dateRow(RG.a,RG.b)+'<div id="rs"></div>';
+ const draw=()=>showReport($('#rs'),reportData(RG.t,RG.a,RG.b),RG.t+'-report');draw();$('#rt').onchange=e=>{RG.t=e.target.value;draw()};['fa','fb'].forEach(i=>$('#'+i).onchange=e=>{RG[i==='fa'?'a':'b']=e.target.value;draw()})};
+
+R.settings=v=>{const K=['Business Name','Tagline','Phone','Email','Address','Facebook','Receipt Footer'];
+ v.innerHTML=`<h1>Settings</h1><div class="card">${K.map(k=>`<label>${k}</label><input data-s="${k}" value="${esc(DB.Settings[k]||'')}">`).join('')}<button class="btn" id="sv" style="margin-top:12px">Save settings</button></div><div class="card"><h2>Connection</h2><p>Backend: ${API?'configured':'not configured'}</p><button class="btn ghost" id="tc">Test connection</button></div><div class="card"><h2>Audit log (latest 20)</h2>${table(['When','Action','Record','ID'],[...DB.AuditLogs].reverse().slice(0,20).map(a=>[esc(a.Timestamp),esc(a.Action),esc(a['Record Type']),esc(a['Record ID'])]))}</div>`;
+ $('#sv').onclick=e=>run(e.target,async()=>{const d={};v.querySelectorAll('[data-s]').forEach(i=>d[i.dataset.s]=i.value);await post('saveSettings',d);await load();toast('Settings saved.');$('#brand').innerHTML=LOGO+esc(S('Business Name'))});
+ $('#tc').onclick=e=>run(e.target,async()=>{await load();toast('Connected to Google Sheets.')})};
+
+/* ---------- router ---------- */
+async function go(){const r=cur(),v=$('#view');document.body.classList.remove('open');document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.dataset.k===r));
+ if(r!=='home'&&!DB){v.innerHTML='<p class="empty">Loading from Google Sheets…</p>';try{await load()}catch(e){v.innerHTML=errBox(e);return}}
+ $('#brand').innerHTML=LOGO+esc(S('Business Name'));v.innerHTML='';(R[r]||R.home)(v);window.scrollTo(0,0)}
+$('#nav').innerHTML=NAV.map(([k,l])=>`<a href="#${k}" data-k="${k}">${l}</a>`).join('');$('#menuBtn').onclick=()=>document.body.classList.toggle('open');
+addEventListener('hashchange',go);go();
+</script>
+</body>
+</html>
